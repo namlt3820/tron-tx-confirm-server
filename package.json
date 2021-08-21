@@ -1,0 +1,50 @@
+{
+  "name": "transaction-confirmation",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "test": "ts-node src/test.ts",
+    "dev:watch": "nodemon --watch 'src/**/*.ts' --exec ts-node src/index.ts",
+    "dep": "docker-compose -f docker-compose.yml up --build -d",
+    "dep:log": "docker-compose -f docker-compose.yml up --build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com:brickglobal/tcs.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com:brickglobal/tcs/issues"
+  },
+  "homepage": "https://github.com:brickglobal/tcs/#readme",
+  "devDependencies": {
+    "@types/cron": "^1.7.3",
+    "@types/ioredis": "^4.26.7",
+    "@types/mongodb": "^3.6.19",
+    "@types/node": "^15.12.5",
+    "nodemon": "^2.0.8",
+    "prettier": "^2.3.2",
+    "tronweb-typings": "^1.0.1",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.3.4"
+  },
+  "dependencies": {
+    "@sentry/node": "^6.8.0",
+    "cron": "^1.8.2",
+    "dotenv": "^10.0.0",
+    "ioredis": "^4.27.7",
+    "kafkajs": "^1.15.0",
+    "mongodb": "^3.6.9",
+    "tronweb": "^4.0.0"
+  },
+  "prettier": {
+    "tabWidth": 4,
+    "useTabs": true
+  }
+}
