@@ -1,6 +1,7 @@
 import Redis from "ioredis";
 import { REDIS_HOST, REDIS_PORT, REDIS_PREFIX, NETWORK } from "./config";
 import IORedis from "ioredis";
+import { IBlock, ITransaction, TransactionStatus } from "./interfaces";
 
 let ioredis: IORedis.Redis;
 
@@ -30,6 +31,60 @@ const getBlockValidationKey = () =>
 const getTimeValidationKey = () =>
 	`${REDIS_PREFIX}.${NETWORK}.time_validations`;
 
+const addBlockEventToRedis = async (block: IBlock) => {
+	const { blockNumber } = block;
+	if (!blockNumber || !Number.isInteger(blockNumber) || blockNumber < 0)
+		throw new Error(`invalid blockNumber`);
+
+	const key = getLatestBlockKey();
+	const value = `${blockNumber}`;
+
+	try {
+		await ioredis.set(key, value);
+		// console.log({ message: `add latest block ${blockNumber}` });
+	} catch (e) {
+		throw e;
+	}
+};
+
+const addTransactionEventToRedis = async (transaction: ITransaction) => {
+	const { transactionId, result, blockNumber } = transaction;
+	if (!transactionId) throw new Error(`invalid transactionId`);
+
+	const keyData = getTxDataKey(transactionId);
+	const valueData = `${result}_${blockNumber.toString()}`;
+	const keyStatus = getTxStatusKey(transactionId);
+	let valueStatus = "";
+
+	// Consider block validation
+	switch (result) {
+		case TransactionStatus.Success:
+			valueStatus = TransactionStatus.WaitingSuccess;
+			break;
+		case TransactionStatus.Fail:
+			valueStatus = TransactionStatus.WaitingFail;
+			break;
+		default:
+			valueStatus = TransactionStatus.Waiting;
+	}
+
+	// Add transaction data and status to Redis
+	try {
+		await Promise.all([
+			ioredis.set(keyData, valueData),
+			ioredis.set(keyStatus, valueStatus),
+		]);
+		console.log({
+			message: `add transaction to redis`,
+			transactionId,
+			transactionStatus: valueStatus,
+			blockNumber,
+		});
+	} catch (e) {
+		throw e;
+	}
+};
+
 export {
 	connectIoRedis,
 	ioredis,
@@ -38,4 +93,6 @@ export {
 	getLatestBlockKey,
 	getBlockValidationKey,
 	getTimeValidationKey,
+	addBlockEventToRedis,
+	addTransactionEventToRedis,
 };

@@ -1,7 +1,7 @@
 import { EachMessagePayload, Kafka, Consumer } from "kafkajs";
 import { KAFKA_TOPICS } from "./config";
 import { Sentry } from "./sentry";
-import { addBlockEventToRedis, addTransactionEventToRedis } from "./event";
+import { addBlockEventToRedis, addTransactionEventToRedis } from "./redis";
 import { TronEvent } from "./interfaces";
 
 const _getTronKafka = (brokers: string[]) =>
@@ -25,7 +25,7 @@ const _connectKafkaConsumer = async (kafkaConsumer: Consumer) => {
 		for (const key of Object.keys(KAFKA_TOPICS)) {
 			// @ts-ignore
 			const topic = KAFKA_TOPICS[key];
-			await kafkaConsumer.subscribe({ topic, fromBeginning: true });
+			await kafkaConsumer.subscribe({ topic });
 
 			console.log(`topic ${topic} subscribed`);
 		}

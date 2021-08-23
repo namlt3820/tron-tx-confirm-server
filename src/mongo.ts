@@ -1,5 +1,6 @@
 import { connect, Db, IndexSpecification, MongoClient } from "mongodb";
 import { MONGO_URI, NETWORK, MONGO_REQUEST_TTL } from "./config";
+import { ITransactionRequest } from "./interfaces";
 
 let client: MongoClient;
 let db: Db;
@@ -67,4 +68,46 @@ const connectMongoDB = async () => {
 	}
 };
 
-export { client, db, connectMongoDB, collectionNames };
+const addTransactionRequestToMongo = async (request: ITransactionRequest) => {
+	const session = client.startSession();
+	session.startTransaction();
+
+	try {
+		const { transactionId } = request;
+
+		const foundRequest = await db
+			.collection(collectionNames.transaction_requests)
+			.findOne({ transactionId });
+
+		if (foundRequest) throw new Error(`transaction request is existed`);
+
+		const createdAt = new Date();
+
+		const { ops } = await db
+			.collection(collectionNames.transaction_requests)
+			.insertOne(
+				{
+					createdAt,
+					...request,
+				},
+				{ session }
+			);
+
+		await session.commitTransaction();
+
+		return ops[0];
+	} catch (e) {
+		if (session.inTransaction()) await session.abortTransaction();
+		throw e;
+	} finally {
+		await session.endSession();
+	}
+};
+
+export {
+	client,
+	db,
+	connectMongoDB,
+	collectionNames,
+	addTransactionRequestToMongo,
+};

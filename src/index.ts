@@ -1,8 +1,9 @@
 import { startKafkaConsumer } from "./kafka";
-import { KAFKA_BROKER, KAFKA_GROUP_ID } from "./config";
+import { KAFKA_BROKER } from "./config";
 import { connectMongoDB } from "./mongo";
 import { connectIoRedis } from "./redis";
 import { Sentry, initSentry } from "./sentry";
+import { v4 as uuidv4 } from "uuid";
 import "./tronweb";
 
 const start = async () => {
@@ -10,10 +11,7 @@ const start = async () => {
 		await Promise.all([connectIoRedis(), connectMongoDB(), initSentry()]);
 
 		await Promise.all([
-			startKafkaConsumer(
-				[KAFKA_BROKER as string],
-				KAFKA_GROUP_ID as string
-			),
+			startKafkaConsumer([KAFKA_BROKER as string], "tcs-" + uuidv4()),
 		]);
 	} catch (e) {
 		Sentry.captureException(e);

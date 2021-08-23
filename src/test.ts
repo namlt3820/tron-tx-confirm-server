@@ -1,29 +1,38 @@
-import { connectMongoDB } from "./mongo";
+// @ts-nocheck
+import { connectMongoDB, addTransactionRequestToMongo } from "./mongo";
 import { connectIoRedis } from "./redis";
-import { getTransactionFromNetwork } from "./event";
-import "./tronweb";
+import { getTransactionStatusFromRedis } from "./request";
+import { startKafkaConsumer } from "./kafka";
+import { KAFKA_BROKER } from "./config";
+import { initTronWeb } from "./tronweb";
+import { v4 as uuidv4 } from "uuid";
+import { jobValidateTime, jobValidateBlock } from "./cron";
 
-/*
- * Tested API:
- * getTxStatusKey
- * addTransactionRequestToMongo
- * addTransactionEventToRedis
- * addBlockEventToRedis
- * */
+const txId = "5f569587ca8963449210f02d30c7571f37156d0cc8cc9239be95325ddf83bf2f";
 
 const start = async () => {
 	try {
-		await Promise.all([connectIoRedis(), connectMongoDB()]);
+		// setup dependencies
+		await Promise.all([connectIoRedis(), connectMongoDB(), initTronWeb()]);
 		await Promise.all([
-			getTransactionFromNetwork(
-				"6a8d362b7f6e01fe61007d3f707119821904effc6c306104fe836f16a99d4845"
-			),
-			// getTransactionFromNetwork(
-			// 	"bcf6c91ac7fbc3224b10d2c2aacd41e9d00189a284fa5d8206eeb4c66063f3c7"
-			// ),
-			// getTransactionFromNetwork(""),
+			startKafkaConsumer([KAFKA_BROKER as string], "tcs-" + uuidv4()),
 		]);
-		console.log("done");
+
+		// setup cron jobs
+		jobValidateBlock.start();
+		jobValidateTime.start();
+
+		// request transaction status
+		await addTransactionRequestToMongo({
+			transactionId: txId,
+			options: {
+				blockValidationIfFound: 5,
+				timeValidationIfNotFound: 120,
+				timeRetryIfNotResponse: 600,
+				responseUrl: "",
+			},
+		}),
+			await getTransactionStatusFromRedis(txId);
 		return;
 	} catch (e) {
 		throw e;

@@ -41,7 +41,8 @@
     "ioredis": "^4.27.7",
     "kafkajs": "^1.15.0",
     "mongodb": "^3.6.9",
-    "tronweb": "^4.0.0"
+    "tronweb": "^4.0.0",
+    "uuid": "^8.3.2"
   },
   "prettier": {
     "tabWidth": 4,
