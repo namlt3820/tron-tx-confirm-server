@@ -35,11 +35,18 @@
     "typescript": "^4.3.4"
   },
   "dependencies": {
+    "@grpc/grpc-js": "^1.1.0",
+    "@grpc/proto-loader": "^0.5.0",
     "@sentry/node": "^6.8.0",
+    "@types/minimist": "^1.2.2",
+    "async": "^1.5.2",
     "cron": "^1.8.2",
     "dotenv": "^10.0.0",
+    "google-protobuf": "^3.0.0",
     "ioredis": "^4.27.7",
     "kafkajs": "^1.15.0",
+    "lodash": "^4.6.1",
+    "minimist": "^1.2.5",
     "mongodb": "^3.6.9",
     "tronweb": "^4.0.0",
     "uuid": "^8.3.2"
