@@ -1,47 +1,67 @@
-var grpc = require("@grpc/grpc-js");
-var protoLoader = require("@grpc/proto-loader");
+import * as grpc from "@grpc/grpc-js";
+import * as protoLoader from "@grpc/proto-loader";
+import { addTransactionRequestToMongo } from "../mongo";
+import { getTransactionStatusFromRedis } from "../request";
 
-var PROTO_PATH = __dirname + "/transaction.proto";
-var packageDefinition = protoLoader.loadSync(PROTO_PATH, {
+const PROTO_PATH = __dirname + "/transaction-request.proto";
+const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 	keepCase: true,
 	longs: String,
 	enums: String,
 	defaults: true,
 	oneofs: true,
 });
-var hello_proto = grpc.loadPackageDefinition(packageDefinition).helloworld;
+const tx_request_proto =
+	grpc.loadPackageDefinition(packageDefinition).transaction_request;
+
+let serverRequest;
 
 /**
- * Implements the SayHello RPC method.
+ * Implements the SendTransactionRequest RPC method.
  */
-function sayHello(call, callback) {
-	callback(null, { message: "Hello " + call.request.name });
-}
+const sendTransactionRequest = async (call, callback) => {
+	try {
+		const { transactionId, options } = call.request;
+
+		// request transaction status
+		await addTransactionRequestToMongo({
+			transactionId,
+			options,
+		});
+
+		const transactionStatus = await getTransactionStatusFromRedis(
+			transactionId
+		);
+
+		callback(null, {
+			transactionId,
+			transactionStatus,
+		});
+	} catch (e) {
+		const { transactionId } = call.request;
+		callback(null, {
+			transactionId,
+			error: e.message || "Something wrong with the request",
+		});
+	}
+};
 
 /**
- * Implements the SayHelloAgain RPC method.
+ * Starts an RPC server that receives requests for the TransactionRequest service
  */
-function sayHelloAgain(call, callback) {
-	callback(null, { message: "Hello again, " + call.request.name });
-}
-
-/**
- * Starts an RPC server that receives requests for the Greeter service at the
- * sample server port
- */
-function main() {
-	var server = new grpc.Server();
-	server.addService(hello_proto.Greeter.service, {
-		sayHello: sayHello,
-		sayHelloAgain: sayHelloAgain,
+const startServerRequest = (host: string) => {
+	var serverRequest = new grpc.Server();
+	// @ts-ignore
+	serverRequest.addService(tx_request_proto.TransactionRequest.service, {
+		sendTransactionRequest: sendTransactionRequest,
 	});
-	server.bindAsync(
-		"0.0.0.0:50051",
+	serverRequest.bindAsync(
+		host,
 		grpc.ServerCredentials.createInsecure(),
 		() => {
-			server.start();
+			serverRequest.start();
 		}
 	);
-}
+};
 
-main();
+export { serverRequest, startServerRequest };

@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.grpc.examples.transaction-request";
+option java_outer_classname = "TransactionRequestProto";
+option objc_class_prefix = "TxRq";
+
+package transaction_request;
+
+// The transaction request service definition.
+service TransactionRequest {
+  // Sends a transaction status request
+  rpc SendTransactionRequest (TxRequest) returns (TxReply) {}
+}
+
+message TxRequest {
+  string transactionId = 1;
+  message Options {
+      int32 blockValidationIfFound = 1;
+      int32 timeValidationIfNotFound = 2;
+      int32 timeRetryIfNotResponse = 3;
+      string responseUrl = 4;
+   }
+  Options options = 2;
+}
+
+message TxReply {
+  string transactionId = 1;
+  string transactionStatus = 2;
+  string error = 3;
+}

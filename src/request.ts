@@ -51,6 +51,7 @@ const getTransactionStatusFromRedis = async (transactionId: string) => {
 			transactionStatus: valueStatus,
 			message: "immediate response",
 		});
+		return valueStatus;
 	} catch (e) {
 		throw e;
 	}
