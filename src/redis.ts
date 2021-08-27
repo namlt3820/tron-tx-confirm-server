@@ -1,5 +1,11 @@
 import Redis from "ioredis";
-import { REDIS_HOST, REDIS_PORT, REDIS_PREFIX, NETWORK } from "./config";
+import {
+	REDIS_HOST,
+	REDIS_PORT,
+	REDIS_PREFIX,
+	NETWORK,
+	TIME_CLEANUP_TRANSACTION,
+} from "./config";
 import IORedis from "ioredis";
 import { IBlock, ITransaction, TransactionStatus } from "./interfaces";
 
@@ -31,6 +37,8 @@ const getBlockValidationKey = () =>
 const getTimeValidationKey = () =>
 	`${REDIS_PREFIX}.${NETWORK}.time_validations`;
 
+const getCleanupKey = () => `${REDIS_PREFIX}.${NETWORK}.cleanup`;
+
 const addBlockEventToRedis = async (block: IBlock) => {
 	const { blockNumber } = block;
 	if (!blockNumber || !Number.isInteger(blockNumber) || blockNumber < 0)
@@ -51,6 +59,10 @@ const addTransactionEventToRedis = async (transaction: ITransaction) => {
 	const { transactionId, result, blockNumber } = transaction;
 	if (!transactionId) throw new Error(`invalid transactionId`);
 
+	const keyCleanup = getCleanupKey();
+	const expiredAt = new Date(
+		new Date().getTime() + Number(TIME_CLEANUP_TRANSACTION) * 1000
+	);
 	const keyData = getTxDataKey(transactionId);
 	const valueData = `${result}_${blockNumber.toString()}`;
 	const keyStatus = getTxStatusKey(transactionId);
@@ -68,18 +80,19 @@ const addTransactionEventToRedis = async (transaction: ITransaction) => {
 			valueStatus = TransactionStatus.Waiting;
 	}
 
-	// Add transaction data and status to Redis
+	// Add transaction data, status, expired date  to Redis
 	try {
 		await Promise.all([
 			ioredis.set(keyData, valueData),
 			ioredis.set(keyStatus, valueStatus),
+			ioredis.hset(keyCleanup, transactionId, JSON.stringify(expiredAt)),
 		]);
-		console.log({
-			message: `add transaction to redis`,
-			transactionId,
-			transactionStatus: valueStatus,
-			blockNumber,
-		});
+		// console.log({
+		// 	message: `add transaction to redis`,
+		// 	transactionId,
+		// 	transactionStatus: valueStatus,
+		// 	blockNumber,
+		// });
 	} catch (e) {
 		throw e;
 	}
@@ -93,6 +106,7 @@ export {
 	getLatestBlockKey,
 	getBlockValidationKey,
 	getTimeValidationKey,
+	getCleanupKey,
 	addBlockEventToRedis,
 	addTransactionEventToRedis,
 };

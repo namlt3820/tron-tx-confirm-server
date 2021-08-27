@@ -6,9 +6,9 @@ import { startKafkaConsumer } from "./kafka";
 import { KAFKA_BROKER } from "./config";
 import { initTronWeb } from "./tronweb";
 import { v4 as uuidv4 } from "uuid";
-import { jobValidateTime, jobValidateBlock } from "./cron";
+import { jobValidateTime, jobValidateBlock, jobCleanup } from "./cron";
 
-const txId = "5f569587ca8963449210f02d30c7571f37156d0cc8cc9239be95325ddf83bf2f";
+const txId = "300d0238c2cb5398ef725f05eb85efda74ad83697a60ed63a8c5586af8101a73";
 
 const start = async () => {
 	try {
@@ -21,18 +21,19 @@ const start = async () => {
 		// setup cron jobs
 		jobValidateBlock.start();
 		jobValidateTime.start();
+		jobCleanup.start();
 
 		// request transaction status
 		await addTransactionRequestToMongo({
 			transactionId: txId,
 			options: {
-				blockValidationIfFound: 5,
-				timeValidationIfNotFound: 120,
-				timeRetryIfNotResponse: 600,
+				blockValidationIfFound: 10,
+				timeValidationIfNotFound: 180,
+				timeRetryIfNotResponse: 400,
 				responseUrl: "",
 			},
-		}),
-			await getTransactionStatusFromRedis(txId);
+		});
+		await getTransactionStatusFromRedis(txId);
 		return;
 	} catch (e) {
 		throw e;

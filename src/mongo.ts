@@ -1,5 +1,10 @@
 import { connect, Db, IndexSpecification, MongoClient } from "mongodb";
-import { MONGO_URI, NETWORK, MONGO_REQUEST_TTL } from "./config";
+import {
+	MONGO_URI,
+	NETWORK,
+	BLOCK_VALIDATION_LIMIT,
+	TIME_VALIDATION_LIMIT,
+} from "./config";
 import { ITransactionRequest } from "./interfaces";
 
 let client: MongoClient;
@@ -11,7 +16,6 @@ const collectionNames = {
 
 const TransactionRequestIndexes: IndexSpecification[] = [
 	{ key: { transactionId: 1 }, unique: true },
-	{ key: { createdAt: 1 }, expireAfterSeconds: Number(MONGO_REQUEST_TTL) },
 ];
 
 const connectMongoDB = async () => {
@@ -73,14 +77,34 @@ const addTransactionRequestToMongo = async (request: ITransactionRequest) => {
 	session.startTransaction();
 
 	try {
-		const { transactionId } = request;
+		const {
+			transactionId,
+			options: { blockValidationIfFound, timeValidationIfNotFound },
+		} = request;
+
+		// Validate request
+		if (blockValidationIfFound > Number(BLOCK_VALIDATION_LIMIT)) {
+			throw new Error(
+				`blockValidationIfFound limit is ${BLOCK_VALIDATION_LIMIT}`
+			);
+		}
+
+		if (timeValidationIfNotFound > Number(TIME_VALIDATION_LIMIT)) {
+			throw new Error(
+				`timeValidationIfNotFound limit is ${TIME_VALIDATION_LIMIT}`
+			);
+		}
 
 		const foundRequest = await db
 			.collection(collectionNames.transaction_requests)
 			.findOne({ transactionId });
 
-		if (foundRequest) throw new Error(`transaction request is existed`);
+		if (foundRequest) {
+			console.log("The request is already received");
+			return;
+		}
 
+		// Insert request to Mongo
 		const createdAt = new Date();
 
 		const { ops } = await db

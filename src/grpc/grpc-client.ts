@@ -12,6 +12,7 @@ var packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 });
 var hello_proto = grpc.loadPackageDefinition(packageDefinition).helloworld;
 
+// @ts-ignore
 function main() {
 	var argv = parseArgs(process.argv.slice(2), {
 		string: "target",

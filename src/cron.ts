@@ -2,7 +2,9 @@ import { CronJob } from "cron";
 import { getTransactionFromNetwork } from "./request";
 import {
 	getBlockValidationKey,
+	getCleanupKey,
 	getTimeValidationKey,
+	getTxDataKey,
 	getTxStatusKey,
 	ioredis,
 } from "./redis";
@@ -190,6 +192,56 @@ const handleTransactionNotFound = async (transactionId: string) => {
 	console.log({ transactionStatus: value, transactionId });
 };
 
+const jobCleanup = new CronJob(
+	"25 * * * * *",
+	async function () {
+		try {
+			console.log("job cleanup");
+			const currentDate = new Date();
+			const key = getCleanupKey();
+			const value = await ioredis.hkeys(key);
+
+			if (value && value.length) {
+				for (const transactionId of value) {
+					const expiredAt = new Date(
+						JSON.parse(await ioredis.hget(key, transactionId))
+					);
+					if (expiredAt < currentDate) {
+						// Clean redis tx data
+						const keyData = await getTxDataKey(transactionId);
+						ioredis.del(keyData);
+
+						// Clean redis tx status
+						const keyStatus = await getTxStatusKey(transactionId);
+						ioredis.del(keyStatus);
+
+						// Clean redis tx block validation
+						const keyBlockValidation =
+							await getBlockValidationKey();
+						ioredis.hdel(keyBlockValidation, transactionId);
+
+						// Clean redis tx time validation
+						const keyTimeValidation = await getTimeValidationKey();
+						ioredis.hdel(keyTimeValidation, transactionId);
+
+						// Clean redis tx cleanup
+						ioredis.hdel(key, transactionId);
+
+						// Clean mongo tx request
+						db.collection(
+							collectionNames.transaction_requests
+						).findOneAndDelete({ transactionId });
+					}
+				}
+			}
+		} catch (e) {
+			throw e;
+		}
+	},
+	null,
+	true
+);
+
 export {
 	validateBlockIfFound,
 	jobValidateBlock,
@@ -197,4 +249,5 @@ export {
 	validateTimeIfNotFound,
 	jobValidateTime,
 	handleTransactionNotFound,
+	jobCleanup,
 };
