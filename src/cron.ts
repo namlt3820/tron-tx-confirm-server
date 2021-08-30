@@ -9,8 +9,9 @@ import {
 	ioredis,
 } from "./redis";
 import { NETWORK, REDIS_PREFIX } from "./config";
-import { collectionNames, db } from "./mongo";
-import { TransactionStatus } from "./interfaces";
+import { collectionNames, db, getTxRequestFromMongo } from "./mongo";
+import { ITransactionStatus, TransactionStatus } from "./interfaces";
+import { startServerStatus } from "./grpc";
 
 const validateBlockIfFound = async (
 	transactionId: string
@@ -25,15 +26,9 @@ const validateBlockIfFound = async (
 		const [_, txBlockNumber] = value.split("_");
 
 		// Get blockValidation if found
-		const foundRequest = await db
-			.collection(collectionNames.transaction_requests)
-			.findOne({ transactionId });
-
-		if (!foundRequest) throw new Error("transaction request not found");
-
 		const {
 			options: { blockValidationIfFound },
-		} = foundRequest;
+		} = await getTxRequestFromMongo(transactionId);
 
 		// Get current / latest block number from redis
 		const keyBlock = `${REDIS_PREFIX}.${NETWORK}.latest_block`;
@@ -79,49 +74,47 @@ const jobValidateBlock = new CronJob(
 	true
 );
 
-const handleSuccessfulBlockValidation = async (txData: {
-	transactionId: string;
-	transactionStatus: string;
-}) => {
-	// Finalize transaction status
-	const { transactionStatus, transactionId } = txData;
-	const keyStatus = getTxStatusKey(transactionId);
-	let valueStatus = "";
-	switch (transactionStatus) {
-		case TransactionStatus.WaitingSuccess:
-			valueStatus = TransactionStatus.Success;
-			break;
-		case TransactionStatus.WaitingFail:
-			valueStatus = TransactionStatus.Fail;
-			break;
+const handleSuccessfulBlockValidation = async (txData: ITransactionStatus) => {
+	try {
+		// Finalize transaction status
+		const { transactionStatus, transactionId } = txData;
+		const keyStatus = getTxStatusKey(transactionId);
+		let valueStatus = "";
+		switch (transactionStatus) {
+			case TransactionStatus.WaitingSuccess:
+				valueStatus = TransactionStatus.Success;
+				break;
+			case TransactionStatus.WaitingFail:
+				valueStatus = TransactionStatus.Fail;
+				break;
+		}
+		await ioredis.set(keyStatus, valueStatus);
+
+		// Remove cronjob
+		const key = getBlockValidationKey();
+		await ioredis.hdel(key, transactionId);
+
+		// Get response url
+		const {
+			options: { responseUrl },
+		} = await getTxRequestFromMongo(transactionId);
+
+		startServerStatus(responseUrl, {
+			transactionId,
+			transactionStatus: valueStatus,
+		});
+	} catch (e) {
+		console.log(e);
 	}
-	await ioredis.set(keyStatus, valueStatus);
-
-	// Remove cronjob
-	const key = getBlockValidationKey();
-	await ioredis.hdel(key, transactionId);
-
-	// TODO: write gRPC call to send back transaction status
-	console.log({
-		transactionStatus: valueStatus,
-		transactionId,
-		message: "validate block success",
-	});
 };
 
 const validateTimeIfNotFound = async (transactionId: string) => {
 	try {
 		// Get time validation if not found
-		const foundRequest = await db
-			.collection(collectionNames.transaction_requests)
-			.findOne({ transactionId });
-
-		if (!foundRequest) throw new Error("transaction request not found");
-
 		const {
 			options: { timeValidationIfNotFound },
 			createdAt,
-		} = foundRequest;
+		} = await getTxRequestFromMongo(transactionId);
 
 		// Compare to current time
 		const dateLimit = new Date(
@@ -180,16 +173,27 @@ const jobValidateTime = new CronJob(
 );
 
 const handleTransactionNotFound = async (transactionId: string) => {
-	const key = getTxStatusKey(transactionId);
-	const value = TransactionStatus.NotFound;
-	await ioredis.set(key, value);
+	try {
+		const key = getTxStatusKey(transactionId);
+		const value = TransactionStatus.NotFound;
+		await ioredis.set(key, value);
 
-	// remove cronjob
-	const keyTimeValidation = getTimeValidationKey();
-	await ioredis.hdel(keyTimeValidation, transactionId);
+		// remove cronjob
+		const keyTimeValidation = getTimeValidationKey();
+		await ioredis.hdel(keyTimeValidation, transactionId);
 
-	// TODO: write gRPC call to send back transaction status
-	console.log({ transactionStatus: value, transactionId });
+		// Get response url
+		const {
+			options: { responseUrl },
+		} = await getTxRequestFromMongo(transactionId);
+
+		startServerStatus(responseUrl, {
+			transactionId,
+			transactionStatus: value,
+		});
+	} catch (e) {
+		console.log(e);
+	}
 };
 
 const jobCleanup = new CronJob(

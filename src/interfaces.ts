@@ -8,7 +8,7 @@ export interface ITransaction {
 	blockNumber: number;
 }
 
-export interface ITransactionRequest {
+export interface ITxRequest {
 	transactionId: string;
 	options: {
 		blockValidationIfFound: number;
@@ -16,6 +16,12 @@ export interface ITransactionRequest {
 		timeRetryIfNotResponse?: number;
 		responseUrl: string;
 	};
+}
+
+export interface ITransactionStatus {
+	transactionId: string;
+	transactionStatus: string;
+	error?: string;
 }
 
 export enum TronEvent {

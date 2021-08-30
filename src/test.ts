@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { connectMongoDB, addTransactionRequestToMongo } from "./mongo";
+import { connectMongoDB, addTxRequestToMongo } from "./mongo";
 import { connectIoRedis } from "./redis";
 import { getTransactionStatusFromRedis } from "./request";
 import { startKafkaConsumer } from "./kafka";
@@ -14,11 +14,11 @@ import { jobValidateTime, jobValidateBlock, jobCleanup } from "./cron";
 import {
 	clientRequest,
 	startClientRequest,
-	serverRequest,
+	startClientStatus,
 	startServerRequest,
 } from "./grpc";
 
-const txId = "6287d41dcdec1ebf3df1347638a0e707591cc6beb2bc0c0f43a666ff8b1485f3";
+const txId = "7f0d86143e50d603b3bf3402fbb6574139e1436429c0bf1aa43d79658d0c46ba";
 
 const start = async () => {
 	try {
@@ -36,21 +36,25 @@ const start = async () => {
 		//gRPC
 		startServerRequest(GRPC_TX_REQUEST_HOST);
 		startClientRequest(GRPC_TX_REQUEST_HOST);
+		startClientStatus(GRPC_TX_STATUS_HOST, (tx) => {
+			console.log({ message: "internal callback", data: tx });
+		});
 
 		clientRequest.sendTransactionRequest(
 			{
 				transactionId: txId,
 				options: {
-					responseUrl: "client-url",
+					responseUrl: GRPC_TX_STATUS_HOST,
 					timeRetryIfNotResponse: 1000,
 					timeValidationIfNotFound: 180,
-					blockValidationIfFound: 100,
+					blockValidationIfFound: 10,
 				},
 			},
 			function (err, response) {
-				console.log({ response });
+				console.log({ immediateResponse: response });
 			}
 		);
+
 		return;
 	} catch (e) {
 		throw e;

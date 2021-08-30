@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.grpc.examples.transaction-status";
+option java_outer_classname = "TransactionStatusProto";
+option objc_class_prefix = "TxSt";
+
+package transaction_status;
+
+// The transaction status service definition.
+service TransactionStatus {
+  // Sends a transaction status response
+  rpc SendTransactionStatus (TxRequest) returns (TxReply) {}
+}
+
+message TxRequest {
+  string transactionId = 1;
+  string transactionStatus = 2;
+}
+
+message TxReply {
+  string message = 1;
+}

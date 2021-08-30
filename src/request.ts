@@ -45,12 +45,6 @@ const getTransactionStatusFromRedis = async (transactionId: string) => {
 				});
 			}
 		}
-
-		console.log({
-			transactionId,
-			transactionStatus: valueStatus,
-			message: "immediate response",
-		});
 		return valueStatus;
 	} catch (e) {
 		throw e;
@@ -62,7 +56,6 @@ const getTransactionFromNetwork = async (
 ): Promise<string> => {
 	try {
 		const response = await tronWeb.trx.getTransactionInfo(transactionId);
-		console.log(response);
 		// @ts-ignore
 		let result = "",
 			blockNumber = 0;

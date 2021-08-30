@@ -5,7 +5,7 @@ import {
 	BLOCK_VALIDATION_LIMIT,
 	TIME_VALIDATION_LIMIT,
 } from "./config";
-import { ITransactionRequest } from "./interfaces";
+import { ITxRequest } from "./interfaces";
 
 let client: MongoClient;
 let db: Db;
@@ -72,7 +72,7 @@ const connectMongoDB = async () => {
 	}
 };
 
-const addTransactionRequestToMongo = async (request: ITransactionRequest) => {
+const addTxRequestToMongo = async (request: ITxRequest) => {
 	const session = client.startSession();
 	session.startTransaction();
 
@@ -128,10 +128,21 @@ const addTransactionRequestToMongo = async (request: ITransactionRequest) => {
 	}
 };
 
+const getTxRequestFromMongo = async (transactionId: string) => {
+	const foundRequest = await db
+		.collection(collectionNames.transaction_requests)
+		.findOne({ transactionId });
+
+	if (!foundRequest) throw new Error("transaction request not found");
+
+	return foundRequest;
+};
+
 export {
 	client,
 	db,
 	connectMongoDB,
 	collectionNames,
-	addTransactionRequestToMongo,
+	addTxRequestToMongo,
+	getTxRequestFromMongo,
 };

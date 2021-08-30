@@ -87,12 +87,6 @@ const addTransactionEventToRedis = async (transaction: ITransaction) => {
 			ioredis.set(keyStatus, valueStatus),
 			ioredis.hset(keyCleanup, transactionId, JSON.stringify(expiredAt)),
 		]);
-		// console.log({
-		// 	message: `add transaction to redis`,
-		// 	transactionId,
-		// 	transactionStatus: valueStatus,
-		// 	blockNumber,
-		// });
 	} catch (e) {
 		throw e;
 	}

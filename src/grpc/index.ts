@@ -1,2 +1,11 @@
-export { clientRequest, startClientRequest } from "./grpc-client";
-export { serverRequest, startServerRequest } from "./grpc-server";
+export {
+	clientRequest,
+	startClientRequest,
+	clientStatus,
+	startClientStatus,
+} from "./grpc-client";
+export {
+	serverRequest,
+	startServerRequest,
+	startServerStatus,
+} from "./grpc-server";
