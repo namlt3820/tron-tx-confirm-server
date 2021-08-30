@@ -11,8 +11,6 @@ export interface ITransaction {
 export interface ITxRequest {
 	transactionId: string;
 	options: {
-		blockValidationIfFound: number;
-		timeValidationIfNotFound: number;
 		timeRetryIfNotResponse?: number;
 		responseUrl: string;
 	};

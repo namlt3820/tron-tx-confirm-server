@@ -23,13 +23,10 @@ let serverRequest;
 
 const sendTransactionRequest = async (call, callback) => {
 	try {
-		const { transactionId, options } = call.request;
+		const { transactionId } = call.request;
 
 		// request transaction status
-		await addTxRequestToMongo({
-			transactionId,
-			options,
-		});
+		await addTxRequestToMongo(call.request);
 
 		const transactionStatus = await getTransactionStatusFromRedis(
 			transactionId

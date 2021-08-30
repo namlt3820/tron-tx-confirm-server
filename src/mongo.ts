@@ -1,10 +1,5 @@
 import { connect, Db, IndexSpecification, MongoClient } from "mongodb";
-import {
-	MONGO_URI,
-	NETWORK,
-	BLOCK_VALIDATION_LIMIT,
-	TIME_VALIDATION_LIMIT,
-} from "./config";
+import { MONGO_URI, NETWORK } from "./config";
 import { ITxRequest } from "./interfaces";
 
 let client: MongoClient;
@@ -79,20 +74,15 @@ const addTxRequestToMongo = async (request: ITxRequest) => {
 	try {
 		const {
 			transactionId,
-			options: { blockValidationIfFound, timeValidationIfNotFound },
+			options: { responseUrl },
 		} = request;
 
 		// Validate request
-		if (blockValidationIfFound > Number(BLOCK_VALIDATION_LIMIT)) {
-			throw new Error(
-				`blockValidationIfFound limit is ${BLOCK_VALIDATION_LIMIT}`
-			);
+		if (!transactionId) {
+			throw new Error("transactionId is required");
 		}
-
-		if (timeValidationIfNotFound > Number(TIME_VALIDATION_LIMIT)) {
-			throw new Error(
-				`timeValidationIfNotFound limit is ${TIME_VALIDATION_LIMIT}`
-			);
+		if (!responseUrl) {
+			throw new Error("responseUrl is required");
 		}
 
 		const foundRequest = await db
@@ -100,6 +90,7 @@ const addTxRequestToMongo = async (request: ITxRequest) => {
 			.findOne({ transactionId });
 
 		if (foundRequest) {
+			// TODO: gRPC response
 			console.log("The request is already received");
 			return;
 		}

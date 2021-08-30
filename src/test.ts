@@ -18,7 +18,7 @@ import {
 	startServerRequest,
 } from "./grpc";
 
-const txId = "7f0d86143e50d603b3bf3402fbb6574139e1436429c0bf1aa43d79658d0c46ba";
+const txId = "95ae0575c3ab32509d7404bdc2b02ce815cdd857ab7bf8fb772d1f0e5f205f48";
 
 const start = async () => {
 	try {
@@ -46,8 +46,6 @@ const start = async () => {
 				options: {
 					responseUrl: GRPC_TX_STATUS_HOST,
 					timeRetryIfNotResponse: 1000,
-					timeValidationIfNotFound: 180,
-					blockValidationIfFound: 10,
 				},
 			},
 			function (err, response) {

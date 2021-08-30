@@ -8,7 +8,12 @@ import {
 	getTxStatusKey,
 	ioredis,
 } from "./redis";
-import { NETWORK, REDIS_PREFIX } from "./config";
+import {
+	BLOCK_VALIDATION_LIMIT,
+	NETWORK,
+	REDIS_PREFIX,
+	TIME_VALIDATION_LIMIT,
+} from "./config";
 import { collectionNames, db, getTxRequestFromMongo } from "./mongo";
 import { ITransactionStatus, TransactionStatus } from "./interfaces";
 import { startServerStatus } from "./grpc";
@@ -25,11 +30,6 @@ const validateBlockIfFound = async (
 
 		const [_, txBlockNumber] = value.split("_");
 
-		// Get blockValidation if found
-		const {
-			options: { blockValidationIfFound },
-		} = await getTxRequestFromMongo(transactionId);
-
 		// Get current / latest block number from redis
 		const keyBlock = `${REDIS_PREFIX}.${NETWORK}.latest_block`;
 		const currentBlockNumber = await ioredis.get(keyBlock);
@@ -37,7 +37,7 @@ const validateBlockIfFound = async (
 		// Return comparison
 		return (
 			Number(currentBlockNumber) - Number(txBlockNumber) >=
-			blockValidationIfFound
+			Number(BLOCK_VALIDATION_LIMIT)
 		);
 	} catch (e) {
 		throw e;
@@ -111,14 +111,11 @@ const handleSuccessfulBlockValidation = async (txData: ITransactionStatus) => {
 const validateTimeIfNotFound = async (transactionId: string) => {
 	try {
 		// Get time validation if not found
-		const {
-			options: { timeValidationIfNotFound },
-			createdAt,
-		} = await getTxRequestFromMongo(transactionId);
+		const { createdAt } = await getTxRequestFromMongo(transactionId);
 
 		// Compare to current time
 		const dateLimit = new Date(
-			new Date(createdAt).getTime() + timeValidationIfNotFound * 1000
+			new Date(createdAt).getTime() + Number(TIME_VALIDATION_LIMIT) * 1000
 		);
 		const currentDate = new Date();
 		console.log({ dateLimit, currentDate });

@@ -16,10 +16,8 @@ service TransactionRequest {
 message TxRequest {
   string transactionId = 1;
   message Options {
-      int32 blockValidationIfFound = 1;
-      int32 timeValidationIfNotFound = 2;
-      int32 timeRetryIfNotResponse = 3;
-      string responseUrl = 4;
+      int32 timeRetryIfNotResponse = 1;
+      string responseUrl = 2;
    }
   Options options = 2;
 }
