@@ -89,7 +89,7 @@ const addTxRequestToMongo = async (request: ITxRequest) => {
 		// Insert request to Mongo
 		const createdAt = new Date();
 
-		await db.collection(collectionNames.transaction_requests).update(
+		await db.collection(collectionNames.transaction_requests).updateOne(
 			{ transactionId, clientUrl },
 			{
 				createdAt,

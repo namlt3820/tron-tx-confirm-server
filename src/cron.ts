@@ -239,7 +239,7 @@ const jobCleanup = new CronJob(
 						// Clean mongo tx request
 						db.collection(
 							collectionNames.transaction_requests
-						).findOneAndDelete({ transactionId });
+						).deleteMany({ transactionId });
 					}
 				}
 			}
