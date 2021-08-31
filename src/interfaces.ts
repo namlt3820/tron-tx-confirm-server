@@ -40,3 +40,11 @@ export interface ITronWebGetTxInfo {
 		result?: string;
 	};
 }
+
+export type ClientCallback = (tx: ITransactionStatus) => void;
+
+export interface IClientParams {
+	clientUrl: string;
+	serverUrl: string;
+	statusCallback?: ClientCallback;
+}

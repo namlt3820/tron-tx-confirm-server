@@ -1,18 +1,22 @@
-// @ts-nocheck
-import { GRPC_TX_REQUEST_HOST } from "../config";
-import { clientRequest, startClientRequest, startClientStatus } from "../grpc";
+import { startClient } from "../index";
 
-const txId = "715495ac30885421cc3b5749e87442e2a8d8fdd5cf8dc3ebfc5d95bfc5bd062a";
+const txIds = [
+	"b68c6dca547736bfd1a3c139287a90ef904ba12ed301fbc49f1a5a783c5f7ff3",
+	"c05903ccd68d94cdc95d43da7241b71b1f7e1a2cedad42baf5d9aba8e94f8b65",
+	"4a80109520fba6fa9b1294b08a719e7bfe064ede60ca501c0e96f9c8ec80f38d",
+];
 const clientUrl = "localhost:50001";
 
-const start = async () => {
-	try {
-		//gRPC
-		startClientRequest(GRPC_TX_REQUEST_HOST);
-		startClientStatus(clientUrl, (tx) => {
-			console.log({ message: "internal callback", data: tx });
-		});
+(async () => {
+	const clientRequest = await startClient({
+		clientUrl,
+		serverUrl: "localhost:50051",
+		statusCallback: (txStatus) => {
+			console.log({ statusResponse: txStatus });
+		},
+	});
 
+	for (const txId of txIds) {
 		clientRequest.sendTransactionRequest(
 			{
 				transactionId: txId,
@@ -20,14 +24,8 @@ const start = async () => {
 				getFinalStatus: true,
 			},
 			function (err, response) {
-				console.log({ immediateResponse: response });
+				console.log({ requestResponse: response });
 			}
 		);
-
-		return;
-	} catch (e) {
-		console.log({ clientError: e });
 	}
-};
-
-start();
+})();

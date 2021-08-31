@@ -1,6 +1,6 @@
 import * as grpc from "@grpc/grpc-js";
 import * as protoLoader from "@grpc/proto-loader";
-import { ITransactionStatus } from "../interfaces";
+import { ClientCallback } from "../interfaces";
 
 /**
  * Transaction request
@@ -17,20 +17,18 @@ const tx_request_proto = grpc.loadPackageDefinition(
 	packageDefinitionTxRequest
 ).transaction_request;
 
-let clientRequest;
-
-const startClientRequest = (host: string) => {
+const startClientRequest = (serverUrl: string) => {
 	// @ts-ignore
-	clientRequest = new tx_request_proto.TransactionRequest(
-		host,
+	const clientRequest = new tx_request_proto.TransactionRequest(
+		serverUrl,
 		grpc.credentials.createInsecure()
 	);
+	return clientRequest;
 };
 
 /**
  * Transaction status
  */
-type InternalCallback = (tx: ITransactionStatus) => void;
 const PROTO_PATH_TX_STATUS = __dirname + "/transaction-status.proto";
 const packageDefinitionTxStatus = protoLoader.loadSync(PROTO_PATH_TX_STATUS, {
 	keepCase: true,
@@ -43,15 +41,13 @@ const tx_status_proto = grpc.loadPackageDefinition(
 	packageDefinitionTxStatus
 ).transaction_status;
 
-let clientStatus;
-
 const sendTransactionStatus =
-	(internalCallback: InternalCallback) => async (call, callback) => {
+	(statusCallback: ClientCallback) => async (call, callback) => {
 		try {
-			if (typeof internalCallback !== "function") {
+			if (typeof statusCallback !== "function") {
 				throw new Error("You have to provide a callback");
 			}
-			await internalCallback(call.request);
+			await statusCallback(call.request);
 
 			callback(null, {
 				message: "OK",
@@ -62,16 +58,16 @@ const sendTransactionStatus =
 	};
 
 const startClientStatus = (
-	host: string,
-	internalCallback: InternalCallback
+	clientUrl: string,
+	statusCallback: ClientCallback
 ) => {
-	clientStatus = new grpc.Server();
+	const clientStatus = new grpc.Server();
 	// @ts-ignore
 	clientStatus.addService(tx_status_proto.TransactionStatus.service, {
-		sendTransactionStatus: sendTransactionStatus(internalCallback),
+		sendTransactionStatus: sendTransactionStatus(statusCallback),
 	});
 	clientStatus.bindAsync(
-		host,
+		clientUrl,
 		grpc.ServerCredentials.createInsecure(),
 		() => {
 			clientStatus.start();
@@ -79,4 +75,4 @@ const startClientStatus = (
 	);
 };
 
-export { clientRequest, startClientRequest, clientStatus, startClientStatus };
+export { startClientRequest, startClientStatus };

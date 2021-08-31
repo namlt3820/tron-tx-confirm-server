@@ -92,8 +92,7 @@ const addTxRequestToMongo = async (request: ITxRequest) => {
 		await db.collection(collectionNames.transaction_requests).updateOne(
 			{ transactionId, clientUrl },
 			{
-				createdAt,
-				...request,
+				$set: { createdAt, ...request },
 			},
 			{ session, upsert: true }
 		);
