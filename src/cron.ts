@@ -71,7 +71,7 @@ const jobValidateBlock = new CronJob(
 		}
 	},
 	null,
-	true
+	false
 );
 
 const handleSuccessfulBlockValidation = async (txData: ITransactionStatus) => {
@@ -166,7 +166,7 @@ const jobValidateTime = new CronJob(
 		}
 	},
 	null,
-	true
+	false
 );
 
 const handleTransactionNotFound = async (transactionId: string) => {
@@ -240,7 +240,7 @@ const jobCleanup = new CronJob(
 		}
 	},
 	null,
-	true
+	false
 );
 
 export {

@@ -7,7 +7,6 @@
     "build": "rm -rf dist && tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
-    "test": "ts-node src/test.ts",
     "dev:watch": "nodemon --watch 'src/**/*.ts' --exec ts-node src/index.ts",
     "dep": "docker-compose -f docker-compose.yml up --build -d",
     "dep:log": "docker-compose -f docker-compose.yml up --build"
