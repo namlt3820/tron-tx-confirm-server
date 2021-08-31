@@ -10,10 +10,8 @@ export interface ITransaction {
 
 export interface ITxRequest {
 	transactionId: string;
-	options: {
-		timeRetryIfNotResponse?: number;
-		responseUrl: string;
-	};
+	clientUrl: string;
+	getFinalStatus?: boolean;
 }
 
 export interface ITransactionStatus {

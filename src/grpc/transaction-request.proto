@@ -15,11 +15,8 @@ service TransactionRequest {
 
 message TxRequest {
   string transactionId = 1;
-  message Options {
-      int32 timeRetryIfNotResponse = 1;
-      string responseUrl = 2;
-   }
-  Options options = 2;
+  string clientUrl = 2;
+  bool getFinalStatus = 3;
 }
 
 message TxReply {

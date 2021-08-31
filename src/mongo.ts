@@ -72,17 +72,17 @@ const addTxRequestToMongo = async (request: ITxRequest) => {
 	session.startTransaction();
 
 	try {
-		const {
-			transactionId,
-			options: { responseUrl },
-		} = request;
+		let { transactionId, clientUrl, getFinalStatus } = request;
 
 		// Validate request
 		if (!transactionId) {
 			throw new Error("transactionId is required");
 		}
-		if (!responseUrl) {
-			throw new Error("responseUrl is required");
+		if (!clientUrl) {
+			throw new Error("clientUrl is required");
+		}
+		if (!getFinalStatus) {
+			getFinalStatus = false;
 		}
 
 		const foundRequest = await db

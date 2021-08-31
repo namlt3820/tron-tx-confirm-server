@@ -94,12 +94,10 @@ const handleSuccessfulBlockValidation = async (txData: ITransactionStatus) => {
 		const key = getBlockValidationKey();
 		await ioredis.hdel(key, transactionId);
 
-		// Get response url
-		const {
-			options: { responseUrl },
-		} = await getTxRequestFromMongo(transactionId);
+		// Get client url
+		const { clientUrl } = await getTxRequestFromMongo(transactionId);
 
-		startServerStatus(responseUrl, {
+		startServerStatus(clientUrl, {
 			transactionId,
 			transactionStatus: valueStatus,
 		});
@@ -179,12 +177,10 @@ const handleTransactionNotFound = async (transactionId: string) => {
 		const keyTimeValidation = getTimeValidationKey();
 		await ioredis.hdel(keyTimeValidation, transactionId);
 
-		// Get response url
-		const {
-			options: { responseUrl },
-		} = await getTxRequestFromMongo(transactionId);
+		// Get client url
+		const { clientUrl } = await getTxRequestFromMongo(transactionId);
 
-		startServerStatus(responseUrl, {
+		startServerStatus(clientUrl, {
 			transactionId,
 			transactionStatus: value,
 		});
