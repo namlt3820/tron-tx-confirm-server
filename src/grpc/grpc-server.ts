@@ -75,10 +75,10 @@ const tx_request_status = grpc.loadPackageDefinition(
 	packageDefinitionTxStatus
 ).transaction_status;
 
-const startServerStatus = (host: string, tx: ITransactionStatus): void => {
+const startServerStatus = (clientUrl: string, tx: ITransactionStatus): void => {
 	// @ts-ignore
 	const serverStatus = new tx_request_status.TransactionStatus(
-		host,
+		clientUrl,
 		grpc.credentials.createInsecure()
 	);
 

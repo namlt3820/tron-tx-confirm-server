@@ -1,4 +1,4 @@
-import { connect, Db, IndexSpecification, MongoClient } from "mongodb";
+import { connect, Db, MongoClient } from "mongodb";
 import { MONGO_URI, NETWORK } from "./config";
 import { ITxRequest } from "./interfaces";
 
@@ -9,9 +9,10 @@ const collectionNames = {
 	transaction_requests: `${NETWORK}_transaction_requests`,
 };
 
-const TransactionRequestIndexes: IndexSpecification[] = [
-	{ key: { transactionId: 1 }, unique: true },
-];
+const TransactionRequestIndexes = {
+	transactionId: 1,
+	clientUrl: 1,
+};
 
 const connectMongoDB = async () => {
 	console.log(MONGO_URI);
@@ -55,7 +56,7 @@ const connectMongoDB = async () => {
 		await Promise.all([
 			db
 				.collection(collectionNames.transaction_requests)
-				.createIndexes(TransactionRequestIndexes),
+				.createIndex(TransactionRequestIndexes),
 		]);
 
 		console.log(`Mongodb: connected`);
@@ -85,32 +86,19 @@ const addTxRequestToMongo = async (request: ITxRequest) => {
 			getFinalStatus = false;
 		}
 
-		const foundRequest = await db
-			.collection(collectionNames.transaction_requests)
-			.findOne({ transactionId });
-
-		if (foundRequest) {
-			// TODO: gRPC response
-			console.log("The request is already received");
-			return;
-		}
-
 		// Insert request to Mongo
 		const createdAt = new Date();
 
-		const { ops } = await db
-			.collection(collectionNames.transaction_requests)
-			.insertOne(
-				{
-					createdAt,
-					...request,
-				},
-				{ session }
-			);
+		await db.collection(collectionNames.transaction_requests).update(
+			{ transactionId, clientUrl },
+			{
+				createdAt,
+				...request,
+			},
+			{ session, upsert: true }
+		);
 
 		await session.commitTransaction();
-
-		return ops[0];
 	} catch (e) {
 		if (session.inTransaction()) await session.abortTransaction();
 		throw e;
@@ -119,14 +107,12 @@ const addTxRequestToMongo = async (request: ITxRequest) => {
 	}
 };
 
-const getTxRequestFromMongo = async (transactionId: string) => {
-	const foundRequest = await db
-		.collection(collectionNames.transaction_requests)
-		.findOne({ transactionId });
+const getTxRequestsFromMongo = async (transactionId: string) => {
+	const foundRequests = await db
+		.collection<ITxRequest>(collectionNames.transaction_requests)
+		.find({ transactionId });
 
-	if (!foundRequest) throw new Error("transaction request not found");
-
-	return foundRequest;
+	return foundRequests;
 };
 
 export {
@@ -135,5 +121,5 @@ export {
 	connectMongoDB,
 	collectionNames,
 	addTxRequestToMongo,
-	getTxRequestFromMongo,
+	getTxRequestsFromMongo,
 };

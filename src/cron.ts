@@ -14,7 +14,7 @@ import {
 	REDIS_PREFIX,
 	TIME_VALIDATION_LIMIT,
 } from "./config";
-import { collectionNames, db, getTxRequestFromMongo } from "./mongo";
+import { collectionNames, db, getTxRequestsFromMongo } from "./mongo";
 import { ITransactionStatus, TransactionStatus } from "./interfaces";
 import { startServerStatus } from "./grpc";
 
@@ -92,12 +92,10 @@ const handleSuccessfulBlockValidation = async (txData: ITransactionStatus) => {
 
 		// Remove cronjob
 		const key = getBlockValidationKey();
-		await ioredis.hdel(key, transactionId);
+		ioredis.hdel(key, transactionId);
 
-		// Get client url
-		const { clientUrl } = await getTxRequestFromMongo(transactionId);
-
-		startServerStatus(clientUrl, {
+		// client
+		sendTxStatusToClients({
 			transactionId,
 			transactionStatus: valueStatus,
 		});
@@ -106,10 +104,29 @@ const handleSuccessfulBlockValidation = async (txData: ITransactionStatus) => {
 	}
 };
 
+const sendTxStatusToClients = async (tx: ITransactionStatus) => {
+	const { transactionId, transactionStatus } = tx;
+	console.log(tx);
+
+	const foundRequests = await getTxRequestsFromMongo(transactionId);
+	foundRequests.forEach((request) => {
+		const { clientUrl } = request;
+		console.log(request);
+		startServerStatus(clientUrl, {
+			transactionId,
+			transactionStatus,
+		});
+	});
+};
+
 const validateTimeIfNotFound = async (transactionId: string) => {
 	try {
 		// Get time validation if not found
-		const { createdAt } = await getTxRequestFromMongo(transactionId);
+		const foundRequests = await getTxRequestsFromMongo(transactionId);
+		const sortedRequests = await foundRequests
+			.sort({ createdAt: 1 })
+			.toArray();
+		const { createdAt } = sortedRequests[0];
 
 		// Compare to current time
 		const dateLimit = new Date(
@@ -173,17 +190,12 @@ const handleTransactionNotFound = async (transactionId: string) => {
 		const value = TransactionStatus.NotFound;
 		await ioredis.set(key, value);
 
-		// remove cronjob
+		// Remove cronjob
 		const keyTimeValidation = getTimeValidationKey();
-		await ioredis.hdel(keyTimeValidation, transactionId);
+		ioredis.hdel(keyTimeValidation, transactionId);
 
-		// Get client url
-		const { clientUrl } = await getTxRequestFromMongo(transactionId);
-
-		startServerStatus(clientUrl, {
-			transactionId,
-			transactionStatus: value,
-		});
+		// Client
+		sendTxStatusToClients({ transactionId, transactionStatus: value });
 	} catch (e) {
 		console.log(e);
 	}

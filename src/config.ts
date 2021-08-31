@@ -18,7 +18,6 @@ let {
 	BLOCK_VALIDATION_LIMIT,
 	TIME_CLEANUP_TRANSACTION,
 	GRPC_TX_REQUEST_HOST,
-	GRPC_TX_STATUS_HOST,
 } = process.env;
 
 [
@@ -35,7 +34,6 @@ let {
 	"TRON_WEB_PRIVATE_KEY",
 	"TIME_CLEANUP_TRANSACTION",
 	"GRPC_TX_REQUEST_HOST",
-	"GRPC_TX_STATUS_HOST",
 ].forEach((el) => {
 	if (!process.env[el]) {
 		throw new Error(`${el} is required`);
@@ -63,5 +61,4 @@ export {
 	BLOCK_VALIDATION_LIMIT,
 	TIME_CLEANUP_TRANSACTION,
 	GRPC_TX_REQUEST_HOST,
-	GRPC_TX_STATUS_HOST,
 };

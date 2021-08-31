@@ -104,7 +104,7 @@ const processTransactionFromRedis = async (txData: {
 		case TransactionStatus.WaitingFail:
 		case TransactionStatus.WaitingSuccess:
 			if (await validateBlockIfFound(transactionId)) {
-				await handleSuccessfulBlockValidation(txData);
+				handleSuccessfulBlockValidation(txData);
 			} else {
 				// Setup block validation for this transactionId
 				const key = getBlockValidationKey();

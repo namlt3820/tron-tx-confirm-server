@@ -1,21 +1,22 @@
 // @ts-nocheck
-import { GRPC_TX_REQUEST_HOST, GRPC_TX_STATUS_HOST } from "../config";
+import { GRPC_TX_REQUEST_HOST } from "../config";
 import { clientRequest, startClientRequest, startClientStatus } from "../grpc";
 
-const txId = "cbd26d308e90efb8908d3a87e694c23d6738759315b9b1a94ad8bf25095bb9ed";
+const txId = "715495ac30885421cc3b5749e87442e2a8d8fdd5cf8dc3ebfc5d95bfc5bd062a";
+const clientUrl = "localhost:50001";
 
 const start = async () => {
 	try {
 		//gRPC
 		startClientRequest(GRPC_TX_REQUEST_HOST);
-		startClientStatus(GRPC_TX_STATUS_HOST, (tx) => {
+		startClientStatus(clientUrl, (tx) => {
 			console.log({ message: "internal callback", data: tx });
 		});
 
 		clientRequest.sendTransactionRequest(
 			{
 				transactionId: txId,
-				clientUrl: GRPC_TX_STATUS_HOST,
+				clientUrl,
 				getFinalStatus: true,
 			},
 			function (err, response) {

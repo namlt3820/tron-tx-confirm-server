@@ -12,6 +12,7 @@ export interface ITxRequest {
 	transactionId: string;
 	clientUrl: string;
 	getFinalStatus?: boolean;
+	createdAt?: Date;
 }
 
 export interface ITransactionStatus {
