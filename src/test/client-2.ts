@@ -1,4 +1,4 @@
-import { startClient } from "../index";
+import { startClient } from "../client";
 
 const txIds = [
 	"45d6132a72974205b0fc8f6e555824c4cf81402b19bc4b7add84bb81cffd0553",

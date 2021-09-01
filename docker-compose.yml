@@ -1,26 +1,29 @@
 version: '2'
 
 services:
-  mongodb:
-    image: docker.io/bitnami/mongodb:4.4
-    container_name: mongo
-    ports:
-      - "27017:27017"
-    volumes:
-      - 'mongodb_data:/bitnami/mongodb'
-    environment:
-      - MONGODB_ROOT_PASSWORD=password123
   redis:
     image: docker.io/bitnami/redis:6.2
-    container_name: redis
+    container_name: tcs_redis
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_PORT_NUMBER=7000
     ports:
-      - '6379:6379'
+      - '7000:7000'
     volumes:
       - 'redis_data:/bitnami/redis/data'
+  tcs_server:
+    container_name: tcs_server
+    ports:
+      - 50051:50051
+    build:
+      dockerfile: Dockerfile
+      context: .
+      network: host
+    volumes:
+      - /app/node_modules
+      - .:/app
+    depends_on:
+      - redis
 volumes:
-  mongodb_data:
-    driver: local
   redis_data:
     driver: local

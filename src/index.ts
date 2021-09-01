@@ -1,2 +1,3 @@
-export { startClient } from "./client";
-export { startServer } from "./server";
+import { startServer } from "./server";
+
+startServer();

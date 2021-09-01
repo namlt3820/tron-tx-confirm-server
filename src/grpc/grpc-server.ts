@@ -45,14 +45,15 @@ const sendTransactionRequest = async (call, callback) => {
 	}
 };
 
-const startServerRequest = (host: string) => {
+const startServerRequest = (serverUrl: string) => {
+	console.log(serverUrl);
 	serverRequest = new grpc.Server();
 	// @ts-ignore
 	serverRequest.addService(tx_request_proto.TransactionRequest.service, {
 		sendTransactionRequest: sendTransactionRequest,
 	});
 	serverRequest.bindAsync(
-		host,
+		serverUrl,
 		grpc.ServerCredentials.createInsecure(),
 		() => {
 			serverRequest.start();

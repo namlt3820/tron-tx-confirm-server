@@ -1,3 +1,1 @@
-import { startServer } from "../index";
-
-startServer();
+import "../index";

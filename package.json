@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "rm -rf dist && tsc",
-    "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts",
-    "dev:watch": "nodemon --watch 'src/**/*.ts' --exec ts-node src/index.ts",
+    "build": "rm -rf dist && tsc && find src/grpc -type f -name '*.proto' -exec cp '{}' dist/grpc ';'",
+    "start:server": "node dist/index.js",
+    "dev:server": "ts-node src/index.ts",
+    "dev:server:watch": "nodemon --watch 'src/**/*.ts' --exec ts-node src/index.ts",
     "dep": "docker-compose -f docker-compose.yml up --build -d",
     "dep:log": "docker-compose -f docker-compose.yml up --build"
   },
