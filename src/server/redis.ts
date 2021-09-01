@@ -7,7 +7,7 @@ import {
 	TIME_CLEANUP_TRANSACTION,
 } from "./config";
 import IORedis from "ioredis";
-import { IBlock, ITransaction, TransactionStatus } from "./interfaces";
+import { IBlock, ITransaction, TransactionStatus } from "../interfaces";
 
 let ioredis: IORedis.Redis;
 

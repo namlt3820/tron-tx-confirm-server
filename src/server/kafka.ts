@@ -2,7 +2,7 @@ import { EachMessagePayload, Kafka, Consumer } from "kafkajs";
 import { KAFKA_TOPICS } from "./config";
 import { Sentry } from "./sentry";
 import { addBlockEventToRedis, addTransactionEventToRedis } from "./redis";
-import { TronEvent } from "./interfaces";
+import { TronEvent } from "../interfaces";
 
 const _getTronKafka = (brokers: string[]) =>
 	new Kafka({

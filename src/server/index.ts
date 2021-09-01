@@ -5,7 +5,7 @@ import { SERVER_URL, KAFKA_BROKER } from "./config";
 import { initTronWeb } from "./tronweb";
 import { v4 as uuidv4 } from "uuid";
 import { jobCleanup, jobValidateBlock, jobValidateTime } from "./cron";
-import { startServerRequest } from "./grpc";
+import { startServerRequest } from "../grpc/grpc-server";
 
 const startServer = async () => {
 	try {

@@ -1,6 +1,6 @@
 import { connect, Db, MongoClient } from "mongodb";
 import { MONGO_URI, NETWORK } from "./config";
-import { ITxRequest } from "./interfaces";
+import { ITxRequest } from "../interfaces";
 
 let client: MongoClient;
 let db: Db;

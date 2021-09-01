@@ -1,7 +1,7 @@
 import * as grpc from "@grpc/grpc-js";
 import * as protoLoader from "@grpc/proto-loader";
-import { addTxRequestToMongo } from "../mongo";
-import { getTransactionStatusFromRedis } from "../request";
+import { addTxRequestToMongo } from "../server/mongo";
+import { getTransactionStatusFromRedis } from "../server/request";
 import { ITransactionStatus } from "../interfaces";
 
 /**
@@ -46,7 +46,6 @@ const sendTransactionRequest = async (call, callback) => {
 };
 
 const startServerRequest = (serverUrl: string) => {
-	console.log(serverUrl);
 	serverRequest = new grpc.Server();
 	// @ts-ignore
 	serverRequest.addService(tx_request_proto.TransactionRequest.service, {

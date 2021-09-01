@@ -1,5 +1,5 @@
 import { config } from "dotenv";
-import { TronEvent } from "./interfaces";
+import { TronEvent } from "../interfaces";
 
 config();
 

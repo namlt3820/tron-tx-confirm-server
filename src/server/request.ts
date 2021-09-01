@@ -2,7 +2,7 @@ import {
 	ITransaction,
 	ITronWebGetTxInfo,
 	TransactionStatus,
-} from "./interfaces";
+} from "../interfaces";
 import {
 	getBlockValidationKey,
 	getTimeValidationKey,

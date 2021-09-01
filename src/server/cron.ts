@@ -15,8 +15,8 @@ import {
 	TIME_VALIDATION_LIMIT,
 } from "./config";
 import { collectionNames, db, getTxRequestsFromMongo } from "./mongo";
-import { ITransactionStatus, TransactionStatus } from "./interfaces";
-import { startServerStatus } from "./grpc";
+import { ITransactionStatus, TransactionStatus } from "../interfaces";
+import { startServerStatus } from "../grpc/grpc-server";
 
 const validateBlockIfFound = async (
 	transactionId: string

@@ -1,5 +1,5 @@
-import { startClientRequest, startClientStatus } from "./grpc";
-import { IClientParams } from "./interfaces";
+import { startClientRequest, startClientStatus } from "../grpc/grpc-client";
+import { IClientParams } from "../interfaces";
 
 const startClient = async (opts: IClientParams) => {
 	try {

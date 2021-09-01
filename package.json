@@ -1,10 +1,15 @@
 {
-  "name": "transaction-confirmation",
+  "name": "@brickglobal/tsc-server",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Transaction confirmation server",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "rm -rf dist && tsc && find src/grpc -type f -name '*.proto' -exec cp '{}' dist/grpc ';'",
+    "prepare": "npm run build",
     "start:server": "node dist/index.js",
     "dev:server": "ts-node src/index.ts",
     "dev:server:watch": "nodemon --watch 'src/**/*.ts' --exec ts-node src/index.ts",
@@ -13,15 +18,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com:brickglobal/tcs.git"
+    "url": "git+https://github.com:brickglobal/tcs-server.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com:brickglobal/tcs/issues"
+    "url": "https://github.com:brickglobal/tcs-server/issues"
   },
-  "homepage": "https://github.com:brickglobal/tcs/#readme",
+  "homepage": "https://github.com:brickglobal/tcs-server/#readme",
   "devDependencies": {
     "@types/cron": "^1.7.3",
     "@types/ioredis": "^4.26.7",
@@ -37,10 +42,8 @@
     "@grpc/grpc-js": "^1.1.0",
     "@grpc/proto-loader": "^0.5.0",
     "@sentry/node": "^6.8.0",
-    "async": "^1.5.2",
     "cron": "^1.8.2",
     "dotenv": "^10.0.0",
-    "google-protobuf": "^3.0.0",
     "ioredis": "^4.27.7",
     "kafkajs": "^1.15.0",
     "mongodb": "^3.6.9",
