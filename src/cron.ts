@@ -106,7 +106,6 @@ const handleSuccessfulBlockValidation = async (txData: ITransactionStatus) => {
 
 const sendTxStatusToClients = async (tx: ITransactionStatus) => {
 	const { transactionId, transactionStatus } = tx;
-	console.log(tx);
 
 	const foundRequests = await getTxRequestsFromMongo(transactionId);
 	foundRequests.forEach((request) => {
@@ -126,37 +125,40 @@ const validateTimeIfNotFound = async (transactionId: string) => {
 		const sortedRequests = await foundRequests
 			.sort({ createdAt: 1 })
 			.toArray();
-		const { createdAt } = sortedRequests[0];
+		if (sortedRequests.length > 0) {
+			const { createdAt } = sortedRequests[0];
 
-		// Compare to current time
-		const dateLimit = new Date(
-			new Date(createdAt).getTime() + Number(TIME_VALIDATION_LIMIT) * 1000
-		);
-		const currentDate = new Date();
-		console.log({ dateLimit, currentDate });
+			// Compare to current time
+			const dateLimit = new Date(
+				new Date(createdAt).getTime() +
+					Number(TIME_VALIDATION_LIMIT) * 1000
+			);
+			const currentDate = new Date();
+			console.log({ dateLimit, currentDate });
 
-		if (dateLimit >= currentDate) {
-			await getTransactionFromNetwork(transactionId);
-			const keyStatus = getTxStatusKey(transactionId);
-			const valueStatus = await ioredis.get(keyStatus);
+			if (dateLimit >= currentDate) {
+				await getTransactionFromNetwork(transactionId);
+				const keyStatus = getTxStatusKey(transactionId);
+				const valueStatus = await ioredis.get(keyStatus);
 
-			switch (valueStatus) {
-				case TransactionStatus.Waiting:
-					console.log("Still waiting. Nothing changed!");
-					break;
-				case TransactionStatus.WaitingFail:
-				case TransactionStatus.WaitingSuccess:
-					// remove cronjob
-					const keyTimeValidation = getTimeValidationKey();
-					await ioredis.hdel(keyTimeValidation, transactionId);
+				switch (valueStatus) {
+					case TransactionStatus.Waiting:
+						console.log("Still waiting. Nothing changed!");
+						break;
+					case TransactionStatus.WaitingFail:
+					case TransactionStatus.WaitingSuccess:
+						// remove cronjob
+						const keyTimeValidation = getTimeValidationKey();
+						await ioredis.hdel(keyTimeValidation, transactionId);
 
-					// Setup block validation for this transactionId
-					const key = getBlockValidationKey();
-					await ioredis.hset(key, transactionId, valueStatus);
-					break;
+						// Setup block validation for this transactionId
+						const key = getBlockValidationKey();
+						await ioredis.hset(key, transactionId, valueStatus);
+						break;
+				}
+			} else {
+				await handleTransactionNotFound(transactionId);
 			}
-		} else {
-			await handleTransactionNotFound(transactionId);
 		}
 	} catch (e) {
 		throw e;

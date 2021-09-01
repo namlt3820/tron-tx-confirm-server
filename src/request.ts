@@ -118,6 +118,7 @@ const processTransactionFromRedis = async (txData: {
 			break;
 		case TransactionStatus.Fail:
 		case TransactionStatus.Success:
+		case TransactionStatus.NotFound:
 			return;
 	}
 };

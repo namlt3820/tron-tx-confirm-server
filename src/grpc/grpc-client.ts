@@ -50,7 +50,7 @@ const sendTransactionStatus =
 			await statusCallback(call.request);
 
 			callback(null, {
-				message: "OK",
+				message: `${call.request.transactionId}_${call.request.transactionStatus}`,
 			});
 		} catch (e) {
 			console.log(e);
