@@ -8,7 +8,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "rm -rf dist && tsc && find src/grpc -type f -name '*.proto' -exec cp '{}' dist/grpc ';'",
+    "build": "rm -rf dist && tsc && find . -type f -name '.env' -exec cp '{}' dist ';' && find src/grpc -type f -name '*.proto' -exec cp '{}' dist/grpc ';'",
     "prepare": "npm run build",
     "start:server": "node dist/index.js",
     "dev:server": "ts-node src/index.ts",
