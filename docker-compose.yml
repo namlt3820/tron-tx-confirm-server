@@ -21,7 +21,6 @@ services:
       network: host
     volumes:
       - /app/node_modules
-      - .:/app
     depends_on:
       - redis
 volumes:
